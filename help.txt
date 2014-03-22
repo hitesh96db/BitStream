@@ -1,0 +1,4 @@
+If web2py is unable to start the server at the given port, you can change the port manually by doing the following:
+1)Change the port variable in "run.sh"
+2)run this on the terminal "vim ./core/applications/downloader/views/download/main.html"(Read inst 3 before executing the command)
+3)Change the port variable to the new value in line 70.

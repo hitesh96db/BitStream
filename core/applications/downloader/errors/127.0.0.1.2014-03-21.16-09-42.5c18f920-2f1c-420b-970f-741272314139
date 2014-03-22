@@ -1,0 +1,21 @@
+(dp1
+S'output'
+p2
+S"<type 'exceptions.OSError'> [Errno 2] No such file or directory: '/home/hitesh96db/Downloads/Encore\\\\ Deluxe[2004]/'"
+p3
+sS'layer'
+p4
+S'/home/hitesh96db/Documents/web2py/applications/downloader/controllers/download.py'
+p5
+sS'code'
+p6
+S'\n\ndef main():\n\treturn dict()\n\ndef info_extractor():\n\timport os\n\timport json\n\n\turl = request.vars["url"]\n\td = ["title","thumbnail","duration","quality"]\n\tcommand = "youtube-dl -o \'%(title)s.%(ext)s\' --get-thumbnail --get-title --get-duration --get-format "+url\n\tinfo = os.popen(command).read()[:-1].split("\\n")\n\tinfo_extracted = zip(d,info)\n\tjsonob = json.dumps(dict(info_extracted))\n\treturn jsonob\n\ndef chkdir():\n\timport os\n\n\tpath = request.vars["path"]\n\tcommand = "cd "+path\n\tk = os.system(command)\n\treturn k\n\ndef autocomplete():\n\n\timport os\n\t\n\tpath = request.vars["path"]\n\tsearch = path.split("/")[-1]\n\tpath = reduce(lambda x,y:x+y,map(lambda x: "/"+x,path.split("/")[1:-1]))\n\tpath +="/"\n\tos.chdir(path)\n\tlist = os.popen("ls").read()[:-1]\n\tif search is not "":\n        \tt = os.popen("ls | grep \'^"+search+"\'").read()[:-1]\t\n\t\treturn str(t.split("\\n"))\n\telse:\n\t\treturn str(os.popen("ls | grep \'^"+search+"\'").read()[:-1].split("\\n"))\n\t\ndef real_download():\n\n\timport os\n\turl = request.vars["url"]\n        ext = request.vars["ext"]\n        path = request.vars["path"]\n\tos.chdir(path)\n\n\tif ext == "mp4" or ext == "flv":\n\t\tcommand = "youtube-dl -o \'%(title)s.%(ext)s\' -f "+ext+" "+url\n\t\tresult = os.popen(command).read()[:-1]\n\t\tif "100%" in result or "downloaded" in result:\n\t\t\treturn "success"\n\t\telse:\n\t\t\treturn "failure"\n\telse:\n\t\t\n\t\tcommand = "youtube-dl -o \'%(title)s.%(ext)s\' -x --audio-format "+ext+" "+url\n\t\tresult = os.popen(command).read()[:-1]\n\t\tif "100%" in result or "downloaded" in result:\n\t\t\treturn "success"\n\t\telse:\t\n\t\t\treturn "failure"\n\ndef new():\n\treturn dict()\n\ndef cool():\n\treturn request.vars["name"]\ndef echo():\n\treturn dict()\n\nresponse._vars=response._caller(autocomplete)\n'
+p7
+sS'snapshot'
+p8
+(dp9
+sS'traceback'
+p10
+S'Traceback (most recent call last):\n  File "/home/hitesh96db/Documents/web2py/gluon/restricted.py", line 220, in restricted\n    exec ccode in environment\n  File "/home/hitesh96db/Documents/web2py/applications/downloader/controllers/download.py", line 74, in <module>\n  File "/home/hitesh96db/Documents/web2py/gluon/globals.py", line 385, in <lambda>\n    self._caller = lambda f: f()\n  File "/home/hitesh96db/Documents/web2py/applications/downloader/controllers/download.py", line 34, in autocomplete\n    os.chdir(path)\nOSError: [Errno 2] No such file or directory: \'/home/hitesh96db/Downloads/Encore\\\\ Deluxe[2004]/\'\n'
+p11
+s.

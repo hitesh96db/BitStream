@@ -1,0 +1,21 @@
+(dp1
+S'output'
+p2
+S"<type 'exceptions.OSError'> [Errno 2] No such file or directory: ''"
+p3
+sS'layer'
+p4
+S'/home/hitesh96db/Documents/web2py/applications/downloader/controllers/download.py'
+p5
+sS'code'
+p6
+S'\n\ndef main():\n\treturn dict()\n\ndef info_extractor():\n\timport os\n\timport json\n\n\turl = request.vars["url"]\n\td = ["title","thumbnail","duration","quality"]\n\tcommand = "youtube-dl -o \'%(title)s.%(ext)s\' --get-thumbnail --get-title --get-duration --get-format "+url\n\tinfo = os.popen(command).read()[:-1].split("\\n")\n\tinfo_extracted = zip(d,info)\n\tjsonob = json.dumps(dict(info_extracted))\n\treturn jsonob\n\ndef real_download():\n\tif request.vars["ext"] == "mp4":\n\t\timport os\n\n\t\turl = request.vars["url"]\n\t\text = request.vars["ext"]\n\t\tpath = request.vars["path"]\n\t\t\t\n\t\tos.chdir(path)\n\t\tcommand = "youtube-dl -o \'%(title)s.%(ext)s\' "+url\n\t\tos.system(command)\n\t\treturn "Download Successful, File Saved to %s;" % path\n\ndef new():\n\treturn dict()\n\ndef cool():\n\treturn request.vars["name"]\ndef echo():\n\treturn dict()\n\nresponse._vars=response._caller(real_download)\n'
+p7
+sS'snapshot'
+p8
+(dp9
+sS'traceback'
+p10
+S'Traceback (most recent call last):\n  File "/home/hitesh96db/Documents/web2py/gluon/restricted.py", line 220, in restricted\n    exec ccode in environment\n  File "/home/hitesh96db/Documents/web2py/applications/downloader/controllers/download.py", line 39, in <module>\n  File "/home/hitesh96db/Documents/web2py/gluon/globals.py", line 385, in <lambda>\n    self._caller = lambda f: f()\n  File "/home/hitesh96db/Documents/web2py/applications/downloader/controllers/download.py", line 26, in real_download\n    os.chdir(path)\nOSError: [Errno 2] No such file or directory: \'\'\n'
+p11
+s.

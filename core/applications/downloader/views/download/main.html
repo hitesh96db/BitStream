@@ -1,0 +1,477 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<script src="{{=URL('static','js/jquery.js')}}"></script>
+	<script src="{{=URL('static','js/web2py.js')}}"></script>
+	<link href="{{=URL('static', 'css/main.css')}}" rel="stylesheet" type="text/css" />
+	<link href='http://fonts.googleapis.com/css?family=Monofett|Patrick+Hand+SC' rel='stylesheet' type='text/css'>
+	<link href='http://fonts.googleapis.com/css?family=Fauna+One' rel='stylesheet' type='text/css'>
+</head>
+<body style="background-color:#AFC1CC;overflow:hidden;overflow-y:scroll;overflow-x:hidden;">
+
+	<div id="popback"></div>
+	<div id="beg" onscroll="function(){ this.opacity='0.5';}" >
+	<div id="appname">Bit_Stream</div>
+		<div id="appinfo">
+			<ul>
+				<li><a href="http://rg3.github.io/youtube-dl/supportedsites.html" target="_blank">Supported sites</a></li>
+				<li>Powered by - <a href="http://rg3.github.io/youtube-dl/" target="_blank">youtube-dl</a> - <a target="_blank" href="http://www.web2py.com/">web2py</a></li>
+			</ul>
+		</div>
+	</div>	
+	<div id="wrap">
+	</div>
+		<aside id="default-popup" class="avgrund-popup">
+			<p id="formatname">File Format</p>
+			<select id="format">
+				<option >mp4</option>
+				<option >flv</option>
+				<option >mp3</option>
+				<option >ogg</option>
+				<option >aac</option>
+				<option >wav</option>
+			 </select>
+			<p id="pathinfo">Path of Containing Folder(full path)</p> 
+			<input id="dirpath" value="/folder/save/file/here" ></input>
+			<div id="suggestions"><table id="suggest"></table></div>
+			<input id="change" type="submit" class="styled-button-8" value="Apply Changes" onclick="closeDialog()"/>
+				
+		</aside>
+
+	<div id="main">
+		<div id="input">
+			<input id="url" name="url" value="http://video.link.here"></input>
+			<input id="exinfo" type="submit" class="styled-button-8" value="Download" />
+			<div id="copy"><p></p></div>
+			<div id="fixmediv"><p style="text-align:center;background-color:white;"><b>Auto-Repair</b></p><p>Issues faced while downloading vidoes can be possibly repaired by running the auto-repair.</p><p>Run the following command in the terminal</p><p style="background-color:orange;text-align:center;">sudo youtube-dl -U</p></div>
+			<img id="fixme" width="40px" height="40px" src="{{=URL('static','images/fixme.jpeg')}}" ></img>
+			<img id="setting" width="40px" height="40px" src="{{=URL('static','images/settings.png')}}" onclick="openDialog()"></img>
+			<div id="extractor">
+				<img id="extracting" src="{{=URL('static','images/loading10.gif')}}" width="50px" height="50px"></img>
+				<p id="extinfo">Extracting information....</p>
+			</div>
+		</div>
+		<div id="list">
+			<table id="tlist">
+				
+			</table>
+		</div>
+	</div>
+	<div id="end">
+		
+	</div>
+
+
+	<script>
+	var videos = [];
+        var count = -1;
+	var validated = 0;
+	var ip="127.0.0.1";					// CHANGE IP HERE
+	var port="8331";					// CHANGE PORT HERE
+	var idx = -1;
+	var pos = -2;
+	var quitflag = 0;
+	var formats = { "mp4":0,"flv":1,"mp3":2,"ogg":3,"aac":4,"wav":5 };
+	var dir = document.getElementById("dirpath");
+        dir.onkeyup = function(){ autocomplete() };
+	var sug = document.getElementById("suggestions");
+	sug.onmouseover = function(){ this.style.visibility = "hidden"; };
+
+        dir.onclick = function() {  
+			if( this.value == "" )
+			{
+				document.getElementById("suggestions").style.visibility = "hidden";
+				quitflag = 1;
+			}
+			else
+				document.getElementById("suggestions").style.visibility = "visible"; 
+	};
+	
+	function eraserow(o){
+
+		
+		idthis = o.id.slice(1,o.id.length);
+		for( i = videos.length-1 ; i >= 0 ; i-- )
+		{
+			if( videos[i]["id"] == idthis )
+			{
+				pos = i;
+				break;
+			}
+		}
+		var t = document.getElementById("tlist");
+		t.deleteRow(pos);
+		videos.splice(pos,1);
+		count--;
+	}
+
+	function addauto(finalauto)
+	{
+		if( finalauto.length != 0 )
+		{
+			var t = document.getElementById("suggest");
+			for( i = 0 ;i < finalauto.length ; i++ )
+			{
+				row = t.insertRow(0);
+				c = row.insertCell(0);
+				c.innerHTML = finalauto[i];
+			}
+			document.getElementById("suggestions").style.visibility = "visible";
+
+		}
+
+	}
+	function autocomplete()
+	{
+	
+		var xhr = new XMLHttpRequest();
+		var dir = document.getElementById("dirpath");
+                path = dir.value;
+		xhr.open("POST","http://"+ip+":"+port+"/downloader/download/autocomplete",true);
+                xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+                xhr.send("path="+path);
+
+		xhr.onreadystatechange = function(){
+			if( xhr.readyState == 4 && xhr.status == 200 )
+			{
+				flag = 0;
+				auto = xhr.responseText;
+				auto = auto.slice(1,-1).split("'");
+				finalauto = [];
+				for( i = 0; i< auto.length ; i++ )
+				{	
+					if((( auto[i][0] >= 'a' && auto[i][0] <= 'z' ) || ( auto[i][0] >= 'A' && auto[i][0] <= 'Z' )) || ( auto[i][0] >= '0' && auto[i][0] <= '9' ))
+						finalauto.push(auto[i]);
+
+				}
+				
+				var t =  document.getElementById("suggest");
+				if( finalauto.length != 0 )
+				{
+					for( i = 0; i < t.rows.length ; i ++ )
+					{
+						if( finalauto[0] == t.rows[i].cells[0].innerHTML )
+								flag = 1;
+					}
+					if( finalauto.length != t.rows.length )
+						flag = 0; 
+					if( quitflag == 1 )
+					{
+						flag = 0;
+						quitflag = 0;
+					}
+					if( !flag ) 
+					{
+						for( i = t.rows.length-1; i >= 0 ; i--)
+							t.deleteRow(i);
+						addauto(finalauto);
+					}
+				}
+			}
+		}
+	}
+
+	function chkdir(o){
+		
+		var dir = document.getElementById("dirpath");
+                path = dir.value;
+		if( path.indexOf("home") != -1 )
+		{
+			xhr = new XMLHttpRequest();
+			xhr.open("POST","http://"+ip+":"+port+"/downloader/download/chkdir",true);
+                	xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+                	xhr.send("path="+path);	
+		
+			xhr.onreadystatechange = function(){
+				if( xhr.readyState == 4 && xhr.status == 200 )
+				{
+					if( xhr.responseText == "0" )
+						download(o);
+					else
+						openDialog();
+				}		
+			}
+		}
+		else
+		{
+			alert("File must be saved in Home directory!");
+			openDialog();
+		}
+	}
+	function displayPath(o){
+		idthis = o.id;
+                for( i = 0 ; i< videos.length ; i++ )
+                {
+                        if( videos[i]["id"] == idthis )
+                                pos = i;
+                }
+                alert("File saved to "+videos[pos]["path"]+".\nClick on the green bar to remove from Downloads list");
+	}
+	function download(o){
+		
+		var dir = document.getElementById("dirpath");
+                path = dir.value;
+		localStorage.validpath = path;
+		o.innerHTML = "<img style='margin-left:0;' src='{{=URL('static','images/loading7.gif')}}' width='124px' height='80px'>";
+		index = o.id;
+		// finding index of o in videos
+		for(i = 0; i<videos.length ; i++)
+		{
+			if( videos[i]["id"] == index )
+				pos = i;
+		}
+		url = videos[pos]["url"];
+		ext = videos[pos]["format"];
+		videos[pos]["path"] = path;
+		localStorage.ext = formats[ext];
+		var xhr = new XMLHttpRequest();
+		xhr.onreadystatechange = function(){
+			if( xhr.readyState == 4 && xhr.status == 200 )
+			{
+				if( xhr.responseText == "success")
+				{
+					o.innerHTML = "Downloaded";
+					o.onclick = function(){displayPath(this);};
+					searchid = "b"+index;
+					document.getElementById(searchid).className = "downloaded";
+				}
+				else
+				{
+					o.innerHTML = "<img style='margin-left:51%;' id='err' src='{{=URL('static','images/error.png')}}' width='40px' height='40px'>";
+					searchid = "b"+index;
+					document.getElementById('err').onclick = function(){ alert("The Error might have occured due to the following reasons:\n1)Youtube-dl is not updated.Run Auto-Repair\n2)The Format is not supported for the following video.Please change the format.\n3)Videos from the given link can't be Downloaded.\n");  };
+					document.getElementById(searchid).className = "failed";
+				}
+			}
+		}
+		
+		xhr.open("POST","http://"+ip+":"+port+"/downloader/download/real_download",true);
+		xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+		xhr.send("url="+url+"&ext="+ext+"&path="+path);
+	}
+	
+function openDialog() {
+//var el = document.getElementById("popback");
+//el.style.visibility="visible";
+$("#popback").fadeIn(1);
+Avgrund.show( "#default-popup" );
+}
+function closeDialog() {
+Avgrund.hide();
+setTimeout(function(){$("#popback").fadeOut("slow");},350);
+//var el = document.getElementById("popback");el.style.visibility="hidden";
+}
+
+var Avgrund = (function(){
+
+var container = document.documentElement,
+popup = document.querySelector( '.avgrund-popup-animate' ),
+cover = document.querySelector( '.avgrund-cover' ),
+currentState = null;
+
+container.className = container.className.replace( /\s+$/gi, '' ) + ' avgrund-ready';
+
+function sayhi()
+{
+alert("Hi");
+}
+
+// Deactivate on ESC
+function onDocumentKeyUp( event ) {
+if( event.keyCode === 27 ) {
+deactivate();
+}
+}
+
+// Deactivate on click outside
+function onDocumentClick( event ) {
+if( event.target === cover ) {
+deactivate();
+}
+}
+
+function activate( state ) {
+document.addEventListener( 'keyup', onDocumentKeyUp, false );
+document.addEventListener( 'click', onDocumentClick, false );
+document.addEventListener( 'touchstart', onDocumentClick, false );
+
+removeClass( popup, currentState );
+addClass( popup, 'no-transition' );
+addClass( popup, state );
+
+setTimeout( function() {
+removeClass( popup, 'no-transition' );
+addClass( container, 'avgrund-active' );
+}, 0 );
+
+currentState = state;
+}
+
+function deactivate() {
+document.removeEventListener( 'keyup', onDocumentKeyUp, false );
+document.removeEventListener( 'click', onDocumentClick, false );
+document.removeEventListener( 'touchstart', onDocumentClick, false );
+
+removeClass( container, 'avgrund-active' );
+removeClass( popup, 'avgrund-popup-animate')
+}
+
+function disableBlur() {
+addClass( document.documentElement, 'no-blur' );
+}
+
+function addClass( element, name ) {
+element.className = element.className.replace( /\s+$/gi, '' ) + ' ' + name;
+}
+
+function removeClass( element, name ) {
+element.className = element.className.replace( name, '' );
+}
+
+function show(selector){
+popup = document.querySelector( selector );
+addClass(popup, 'avgrund-popup-animate');
+activate();
+return this;
+}
+function hide() {
+deactivate();
+}
+
+return {
+activate: activate,
+deactivate: deactivate,
+disableBlur: disableBlur,
+show: show,
+hide: hide
+}
+
+})();
+
+function validate()
+{
+	l = document.getElementById("url");
+	if ( l.value == 'http://video.link.here')
+		alert("Please enter a Valid URL");
+	else
+		validated = 1;
+}
+	
+function changecolor(o)
+{
+    o.style.color = "blue";
+}
+function restorecolor(o)
+{
+o.style.color="black";
+}
+
+
+	$(document).ready(function(){	
+		clicked = 0;
+		$("#fixme").click(function(){
+	
+			if( clicked == 0 )
+			{	$("#copy").slideDown("fast");
+				$("#fixmediv").fadeIn("slow");
+				clicked = 1;
+			}
+			else
+		  	{
+				$("#fixmediv").slideUp("fast");
+                        	$("#copy").slideUp("fast");
+                		clicked = 0;
+			}
+		});
+
+
+		if( typeof localStorage.ext != "undefined" )
+		{
+			f = document.getElementById("format");
+			f.options.selectedIndex = localStorage.ext;
+		}
+		else
+			document.getElementById("format").options.selectedIndex = 0;
+		if( typeof localStorage.validpath != "undefined" )
+			document.getElementById("dirpath").value = localStorage.validpath;
+		else
+			document.getElementById("dirpath").value = "/folder/save/file/here/";
+		function insertVideo(index)
+                {
+			$("#extracting").fadeOut("slow");
+                        $("#extinfo").fadeOut("slow");
+
+			var t = document.getElementById("tlist");
+			rows = t.rows.length;
+			var row = t.insertRow(rows);
+			var c = [];
+			
+			for( i = 0 ;i < 4; i++)
+ 			{
+				c[i] = row.insertCell(i);
+				if( i == 0 || i == 4)
+					c[i].id = "cell"+(i+1);
+				else
+				{
+					c[i].className = "cells";
+					c[i].id = "cell"+(i+1);
+				}
+			}
+			c[0].id = "b"+index;
+			c[0].onclick = function(){ eraserow(this); } ;
+			c[0].className = "nothing";
+			c[1].innerHTML = "<img src="+videos[count]["thumbnail"]+" width='151px' height='100px' id='tb'></img>";
+			c[2].innerHTML = "<p id='title'>"+videos[count]["title"]+"</p>";
+			if( videos[count]["format"] == "mp4" || videos[count]["format"] == "flv" )
+				c[3].innerHTML = "<p id='quality'>"+videos[count]["quality"]+"</p><p id='ext'>"+videos[count]["format"]+"</p><p class='index' id="+index+" onclick='chkdir(this)' onmouseover='changecolor(this)' onmouseout = 'restorecolor(this)' >Download</p>";
+			else
+				c[3].innerHTML = "<p id='quality'>Audio file</p><p id='ext'>"+videos[count]["format"]+"</p><p class='index' id="+index+" onclick='chkdir(this)' onmouseover='changecolor(this)' onmouseout = 'restorecolor(this)'>Download</p>";	
+		}
+			
+		$("#exinfo").click(function(){
+                		
+			validate();
+			if(validated == 1)
+			{
+			var l = document.getElementById("format");
+			ext = l.options[l.selectedIndex].text;
+			$("#extracting").fadeIn("slow");
+			$("#extinfo").fadeIn("slow");
+
+			url = document.getElementById("url");
+			url = url.value;
+			xhr = new XMLHttpRequest();
+                
+               		xhr.onreadystatechange = function(){
+                       		 if ( xhr.readyState == 4 && xhr.status == 200 )
+   				 {
+					count++;	
+					videos[count] = jQuery.parseJSON(xhr.responseText);
+					if( videos[count]["title"] == "" )
+					{
+						alert("invalid URL");
+						$("#extracting").fadeOut("slow");
+			                        $("#extinfo").fadeOut("slow");
+					}
+					else
+					{
+					idx++;
+					videos[count]["url"] = url;
+					videos[count]["format"] = ext;  	
+					videos[count]["id"] = idx;							// format - extension
+					insertVideo(idx);
+				 	}
+				}
+                        
+                	};
+
+    	                xhr.open("POST","http://"+ip+":"+port+"/downloader/download/info_extractor",true);
+            	        xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+      	                xhr.send("url="+url);
+			}
+        		});
+	});
+	</script>
+	
+</body>
+</html>
